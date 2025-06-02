@@ -1,6 +1,7 @@
 package br.com.vini.userserviceapi.controller;
 
 import br.com.vini.userserviceapi.entity.User;
+import models.responses.UserResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,5 +13,5 @@ import org.springframework.web.bind.annotation.RestController;
 public interface UserController {
 
     @GetMapping("/{id}")
-    ResponseEntity<User> findBId(@PathVariable(name = "id") final String id);
+    ResponseEntity<UserResponse> findBId(@PathVariable(name = "id") final String id);
 }
