@@ -3,6 +3,7 @@ package br.com.vini.userserviceapi.service;
 import br.com.vini.userserviceapi.entity.User;
 import br.com.vini.userserviceapi.mapper.UserMapper;
 import br.com.vini.userserviceapi.repository.UserRepository;
+import models.exceptions.ResourceNotFoundException;
 import models.responses.UserResponse;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,21 @@ class UserServiceTest {
 
         verify(repository, times(1)).findById(anyString());
         verify(mapper, times((1))).fromEntity(any(User.class));
+    }
+
+    @Test
+    void whenCallFindByIdWithInvalidIdThenThrowResourceNotFoundException() {
+        when(repository.findById(anyString())).thenReturn(Optional.empty());
+
+        try {
+            service.findById("1");
+        } catch (Exception e) {
+            assertEquals(ResourceNotFoundException.class, e.getClass());
+            assertEquals("Object not found. Id: 1, Type: UserResponse", e.getMessage());
+        }
+
+        verify(repository, times(1)).findById(anyString());
+        verify(mapper, times(0)).fromEntity(any(User.class));
     }
 
 }
