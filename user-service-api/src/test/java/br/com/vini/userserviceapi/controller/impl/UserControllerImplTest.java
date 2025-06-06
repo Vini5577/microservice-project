@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.List;
 
 import static br.com.vini.userserviceapi.creator.CreatorUtils.generateMock;
+import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -28,6 +29,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class UserControllerImplTest {
 
+    public static final String BASE_URI = "/api/users";
+    public static final String VALID_EMAIL = "kjadaskj@mail.com";
     @Autowired
     private MockMvc mockMvc;
 
@@ -39,7 +42,7 @@ class UserControllerImplTest {
         final var entity = generateMock(User.class);
         final var userId = userRepository.save(entity).getId();
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/users/{id}", userId))
+        mockMvc.perform(MockMvcRequestBuilders.get(BASE_URI + "/{id}", userId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(userId))
                 .andExpect(jsonPath("$.name").value(entity.getName()))
@@ -52,7 +55,7 @@ class UserControllerImplTest {
 
     @Test
     void testFindByIdWithNotFoundException() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/users/{id}","123"))
+        mockMvc.perform(MockMvcRequestBuilders.get(BASE_URI + "/{id}","123"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Object not found. Id: 123, Type: UserResponse"))
                 .andExpect(jsonPath("$.error").value(NOT_FOUND.getReasonPhrase()))
@@ -68,7 +71,7 @@ class UserControllerImplTest {
 
         userRepository.saveAll(List.of(entity1, entity2));
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/users"))
+        mockMvc.perform(MockMvcRequestBuilders.get(BASE_URI))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0]").isNotEmpty())
                 .andExpect(jsonPath("$[1]").isNotEmpty())
@@ -80,15 +83,34 @@ class UserControllerImplTest {
 
     @Test
     void testSaveUserWIthSuccess() throws Exception {
-        final var validEmail = "kjadaskj@mail.com";
-        final var request = generateMock(CreateUserRequest.class).withEmail(validEmail);
+        final var request = generateMock(CreateUserRequest.class).withEmail(VALID_EMAIL);
 
-        mockMvc.perform(post("/api/users")
+        mockMvc.perform(post(BASE_URI)
                 .contentType(APPLICATION_JSON)
                 .content(toJson(request))
         ).andExpect(status().isCreated());
 
-        userRepository.deleteByEmail(validEmail);
+        userRepository.deleteByEmail(VALID_EMAIL);
+    }
+
+    @Test
+    void testSaveUserWithConflict() throws Exception {
+        final var entiy = generateMock(User.class).withEmail(VALID_EMAIL);
+        final var request = generateMock(CreateUserRequest.class).withEmail(VALID_EMAIL);
+
+        userRepository.save(entiy);
+
+        mockMvc.perform(post(BASE_URI)
+                .contentType(APPLICATION_JSON)
+                .content(toJson(request))
+        ).andExpect(status().isConflict())
+         .andExpect(jsonPath("$.message").value("Email [ " + VALID_EMAIL  + " ] already exists"))
+         .andExpect(jsonPath("$.error").value(CONFLICT.getReasonPhrase()))
+         .andExpect(jsonPath("$.path").value(BASE_URI))
+         .andExpect(jsonPath("$.status").value(CONFLICT.value()))
+         .andExpect(jsonPath("$.timestamp").isNotEmpty());
+
+        userRepository.deleteById(entiy.getId());
     }
 
     private String toJson(final Object object) throws Exception {
