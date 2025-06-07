@@ -113,7 +113,7 @@ class UserControllerImplTest {
     }
 
     @Test
-    void testSaveUsarWithNameEmptyThenThrowBadRequest() throws Exception {
+    void testSaveUserWithNameEmptyThenThrowBadRequest() throws Exception {
         final var request = generateMock(CreateUserRequest.class).withName("").withEmail(VALID_EMAIL);
 
         mockMvc.perform(
@@ -128,6 +128,24 @@ class UserControllerImplTest {
             .andExpect(jsonPath("$.timestamp").isNotEmpty())
             .andExpect(jsonPath("$.errors[?(@.fieldName == 'name' && @.message == 'Name must contain between 3 and 50 characters')]").exists())
             .andExpect(jsonPath("$.errors[?(@.fieldName == 'name' && @.message == 'Name cannot be empty')]").exists());
+    }
+
+    @Test
+    void testSaveUserWithEmailEmptyThenThrowBadRequest() throws Exception {
+        final var request = generateMock(CreateUserRequest.class).withEmail("");
+
+        mockMvc.perform(
+                post(BASE_URI)
+                .contentType(APPLICATION_JSON)
+                .content(toJson(request))
+        ).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Exception in validation attributes"))
+                .andExpect(jsonPath("$.error").value("Validation Exception"))
+                .andExpect(jsonPath("$.path").value(BASE_URI))
+                .andExpect(jsonPath("$.status").value(BAD_REQUEST.value()))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.errors[?(@.fieldName == 'email' && @.message ==  'Email cannot be empty')]").exists())
+                .andExpect(jsonPath("$.errors[?(@.fieldName == 'email' && @.message == 'Email must contain between 6 and 50 characters')]").exists());
     }
 
     private String toJson(final Object object) throws Exception {
