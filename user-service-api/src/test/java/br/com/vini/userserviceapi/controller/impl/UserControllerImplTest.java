@@ -148,6 +148,23 @@ class UserControllerImplTest {
                 .andExpect(jsonPath("$.errors[?(@.fieldName == 'email' && @.message == 'Email must contain between 6 and 50 characters')]").exists());
     }
 
+    @Test
+    void testSaveUserWithInvalidEmailThenThrowBadRequest() throws Exception {
+        final var request = generateMock(CreateUserRequest.class).withEmail("teste.");
+
+        mockMvc.perform(
+                post(BASE_URI)
+                .contentType(APPLICATION_JSON)
+                .content(toJson(request))
+        ).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Exception in validation attributes"))
+                .andExpect(jsonPath("$.error").value("Validation Exception"))
+                .andExpect(jsonPath("$.path").value(BASE_URI))
+                .andExpect(jsonPath("$.status").value(BAD_REQUEST.value()))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.errors[?(@.fieldName == 'email' && @.message == 'Invalid email')]").exists());
+    }
+
     private String toJson(final Object object) throws Exception {
         try {
             return new ObjectMapper().writeValueAsString(object);
