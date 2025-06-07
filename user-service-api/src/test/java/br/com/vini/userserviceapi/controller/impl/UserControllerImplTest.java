@@ -4,6 +4,7 @@ import br.com.vini.userserviceapi.entity.User;
 import br.com.vini.userserviceapi.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import models.requests.CreateUserRequest;
+import models.requests.UpdateUserRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -13,12 +14,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.util.Collections;
 import java.util.List;
 
 import static br.com.vini.userserviceapi.creator.CreatorUtils.generateMock;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -81,7 +84,7 @@ class UserControllerImplTest {
     }
 
     @Test
-    void testSaveUserWIthSuccess() throws Exception {
+    void testSaveUserWithSuccess() throws Exception {
         final var request = generateMock(CreateUserRequest.class).withEmail(VALID_EMAIL);
 
         mockMvc.perform(post(BASE_URI)
@@ -181,6 +184,22 @@ class UserControllerImplTest {
                 .andExpect(jsonPath("$.timestamp").isNotEmpty())
                 .andExpect(jsonPath("$.errors[?(@.fieldName == 'password' && @.message == 'Password cannot be empty')]").exists())
                 .andExpect(jsonPath("$.errors[?(@.fieldName == 'password' && @.message == 'Password must contain between 3 and 50 characters')]").exists());
+    }
+
+    @Test
+    void testUpdateUserWithSuccess() throws Exception {
+        final var entity = generateMock(User.class).withEmail(VALID_EMAIL);
+        final var request = generateMock(UpdateUserRequest.class).withEmail(VALID_EMAIL);
+        final var userId = userRepository.save(entity).getId();
+
+        mockMvc.perform(
+                    put(BASE_URI + "/{id}", userId)
+                    .contentType(APPLICATION_JSON)
+                    .content(toJson(request))
+                )
+                .andExpect(status().isOk());
+
+        userRepository.deleteById(userId);
     }
 
     private String toJson(final Object object) throws Exception {
