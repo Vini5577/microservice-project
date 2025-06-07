@@ -226,6 +226,21 @@ class UserControllerImplTest {
         userRepository.deleteAll(List.of(entity1, entity2));
     }
 
+    @Test
+    void testUpdateUserWithNotFoundException() throws Exception {
+        final var request = generateMock(UpdateUserRequest.class).withEmail(VALID_EMAIL);
+        mockMvc.perform(
+                    put(BASE_URI + "/{id}", "123")
+                            .contentType(APPLICATION_JSON)
+                            .content(toJson(request))
+                )
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Object not found. Id: 123, Type: UserResponse"))
+                .andExpect(jsonPath("$.error").value(NOT_FOUND.getReasonPhrase()))
+                .andExpect(jsonPath("$.path").value("/api/users/123"))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty());
+    }
+
     private String toJson(final Object object) throws Exception {
         try {
             return new ObjectMapper().writeValueAsString(object);
