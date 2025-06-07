@@ -16,8 +16,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.List;
 
 import static br.com.vini.userserviceapi.creator.CreatorUtils.generateMock;
-import static org.springframework.http.HttpStatus.CONFLICT;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -111,6 +110,24 @@ class UserControllerImplTest {
          .andExpect(jsonPath("$.timestamp").isNotEmpty());
 
         userRepository.deleteById(entiy.getId());
+    }
+
+    @Test
+    void testSaveUsarWithNameEmptyThenThrowBadRequest() throws Exception {
+        final var request = generateMock(CreateUserRequest.class).withName("").withEmail(VALID_EMAIL);
+
+        mockMvc.perform(
+                post(BASE_URI)
+                .contentType(APPLICATION_JSON)
+                .content(toJson(request))
+        ).andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("Exception in validation attributes"))
+            .andExpect(jsonPath("$.error").value("Validation Exception"))
+            .andExpect(jsonPath("$.path").value(BASE_URI))
+            .andExpect(jsonPath("$.status").value(BAD_REQUEST.value()))
+            .andExpect(jsonPath("$.timestamp").isNotEmpty())
+            .andExpect(jsonPath("$.errors[?(@.fieldName == 'name' && @.message == 'Name must contain between 3 and 50 characters')]").exists())
+            .andExpect(jsonPath("$.errors[?(@.fieldName == 'name' && @.message == 'Name cannot be empty')]").exists());
     }
 
     private String toJson(final Object object) throws Exception {

@@ -17,7 +17,7 @@ public class ValidationException extends StandardError{
     @Getter
     @AllArgsConstructor
     private static class FieldError {
-        private String fielName;
+        private String fieldName;
         private String message;
     }
 
