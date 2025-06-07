@@ -165,6 +165,24 @@ class UserControllerImplTest {
                 .andExpect(jsonPath("$.errors[?(@.fieldName == 'email' && @.message == 'Invalid email')]").exists());
     }
 
+    @Test
+    void testSaveUserWithPasswordEmptyThenThrowBadRequest() throws Exception {
+        final var request = generateMock(CreateUserRequest.class).withPassword("").withEmail(VALID_EMAIL);
+
+        mockMvc.perform(
+                post(BASE_URI)
+                .contentType(APPLICATION_JSON)
+                .content(toJson(request))
+        ).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Exception in validation attributes"))
+                .andExpect(jsonPath("$.error").value("Validation Exception"))
+                .andExpect(jsonPath("$.path").value(BASE_URI))
+                .andExpect(jsonPath("$.status").value(BAD_REQUEST.value()))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.errors[?(@.fieldName == 'password' && @.message == 'Password cannot be empty')]").exists())
+                .andExpect(jsonPath("$.errors[?(@.fieldName == 'password' && @.message == 'Password must contain between 3 and 50 characters')]").exists());
+    }
+
     private String toJson(final Object object) throws Exception {
         try {
             return new ObjectMapper().writeValueAsString(object);
