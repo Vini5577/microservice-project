@@ -202,6 +202,30 @@ class UserControllerImplTest {
         userRepository.deleteById(userId);
     }
 
+    @Test
+    void testUpdateUserWithConflict() throws Exception {
+        final var entity1 = generateMock(User.class).withEmail("test@mail.com").withId("1");
+        final var entity2 = generateMock(User.class).withEmail(VALID_EMAIL);
+        final var request = generateMock(UpdateUserRequest.class).withEmail(VALID_EMAIL);
+        final var userId = userRepository.saveAll(List.of(entity1, entity2))
+                .stream()
+                .filter(e -> e.getId().equals("1")).findFirst()
+                .get().getId();
+
+        mockMvc.perform(
+                put(BASE_URI + "/{id}", userId)
+                        .contentType(APPLICATION_JSON)
+                        .content(toJson(request))
+        ).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Email [ " + VALID_EMAIL  + " ] already exists"))
+                .andExpect(jsonPath("$.error").value(CONFLICT.getReasonPhrase()))
+                .andExpect(jsonPath("$.path").value(BASE_URI + "/1"))
+                .andExpect(jsonPath("$.status").value(CONFLICT.value()))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty());
+
+        userRepository.deleteAll(List.of(entity1, entity2));
+    }
+
     private String toJson(final Object object) throws Exception {
         try {
             return new ObjectMapper().writeValueAsString(object);
