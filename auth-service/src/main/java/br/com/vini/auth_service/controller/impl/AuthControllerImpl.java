@@ -1,7 +1,7 @@
 package br.com.vini.auth_service.controller.impl;
 
 import br.com.vini.auth_service.controller.AuthController;
-import br.com.vini.auth_service.security.dtos.JWTAuthenticationImpl;
+import br.com.vini.auth_service.security.JWTAuthenticationImpl;
 import br.com.vini.auth_service.services.RefreshTokenService;
 import br.com.vini.auth_service.utils.JWTUtils;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +31,8 @@ public class AuthControllerImpl implements AuthController {
 
     @Override
     public ResponseEntity<RefreshTokenResponse> refreshToken(RefreshTokenRequest request) {
-        return null;
+        return ResponseEntity.ok().body(
+                refreshTokenService.refreshToken(request.refreshToken())
+        );
     }
 }
