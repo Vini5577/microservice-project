@@ -1,15 +1,3 @@
 spring:
   application:
     name: 'user-service-api'
-  data:
-    mongodb:
-      uri: 'mongodb+srv://help-desk-user:help-desk-user@clusterhelpdesk.kskmlal.mongodb.net/helpdeskdb?retryWrites=true&w=majority&appName=ClusterHelpDesk'
-      auto-index-creation: true
-springdoc:
-  openapi:
-    title: 'User Service API'
-    description: 'Component responsible for user management created on Formacao BackEnd Expert with Valdir Cezar'
-    version: '1.0.0'
-
-server:
-  port: 8081
